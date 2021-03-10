@@ -21,7 +21,7 @@ let propertyData =[];
             "accept-encoding": "gzip, deflate, br",
             "accept-language": "en-GB,en-US;q=0.9,en;q=0.8,la;q=0.7"
             },
-            gzip : true
+            br : true
     });
 
             let $ = cheerio.load(response);
