@@ -1,65 +1,60 @@
-const request = require("request-promise");
-const cheerio = require("cheerio");
+const puppeteer = require("puppeteer");
 const fs  = require("fs");
 const json2csv = require("json2csv").Parser;
-const populationArray = new Array();
-const MedianArray = new Array();
-const propertyDataURL = "https://www.smartpropertyinvestment.com.au/data/nsw/2075/st-ives";
+
+
 let propertyData =[];
 
+(async function main(){
 
- (async()=>
- {
-   try 
-   {
-   
+    try 
+    {
+        const browser = await puppeteer.launch({headless:true});
+        const page = await browser.newPage();
+        page.setUserAgent(
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36'
+           )
+        await page.goto('https://www.smartpropertyinvestment.com.au/data/nsw/2075/st-ives')
 
-        const response = await request({
-            uri : propertyDataURL,
-            headers:{
-            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-            "accept-encoding": "gzip, deflate, br",
-            "accept-language": "en-GB,en-US;q=0.9,en;q=0.8,la;q=0.7"
-            },
-            br : true
-    });
+        const data = await page.$$eval('table tr td', tds => tds.map((td) => {
+            return td.innerText;
+          }));
+    
+        const MedianPrice = data[0]; //MedianPrice
+        const House = data[1]; //House
+        const Unit = data[2]; //Unit
 
-            let $ = cheerio.load(response);
+        
+        let result = await page.$$eval('.b-suburbprofilepage__demo__head__item .b-suburbprofilepage__demo__head__item__number', names => names.map(name => name.textContent));
 
-            $('div[class="b-module module_container"]>table>tbody>tr:nth-child(1').each((index, element) => {
-                MedianArray.push($(element).text());
+        
+        let res = Object.values(result);
+      
+        const totalPopulation = res[0].trim(); //Total Population
+        const weeklyHouseHoldIncome = res[1].trim(); //Weekly Household Income
+        const householdSize  = res[2].trim(); //House Hold Size
 
-            });
-
-            $('div[class="b-suburbprofilepage__demo__head__item__number"]').each(function(){
-                populationArray.push($(this).text());
+        propertyData.push({
+            MedianPrice,
+            House,
+            Unit,
+            totalPopulation,
+            weeklyHouseHoldIncome,
+            householdSize
         })
 
+        console.log(propertyData);
+        const json2csvParser = new json2csv();
+        const csv = json2csvParser.parse(propertyData);
+        fs.writeFileSync("./csv/data.csv",csv,"utf-8");
 
-                propertyData.push({
+        
 
-                        MedianArray,
-                        populationArray
+    }
+    catch(e)
+    {
+        console.log('our error',e);
+    }
 
-                })
-
-
-           
-            const json2csvParser = new json2csv();
-            const csv = json2csvParser.parse(propertyData);
-            fs.writeFileSync("./csv/data.csv",csv,"utf-8");
-
-            }
-            catch(error){console.error()};
-
-
-            
 })();
-
-
-
-
-
-
-
-
+ 

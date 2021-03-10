@@ -12,7 +12,12 @@
   "dependencies": {
     "cheerio": "^1.0.0-rc.5",
     "json2csv": "^5.0.6",
+    "puppeteer": "^8.0.0",
+    "puppeteer-core": "^1.9.0",
     "request": "^2.88.2",
     "request-promise": "^4.2.6"
+  },
+  "devDependencies": {
+    "@types/puppeteer": "^5.4.3"
   }
 }
