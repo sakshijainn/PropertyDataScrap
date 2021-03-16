@@ -1,7 +1,47 @@
 const puppeteer = require("puppeteer");
 const fs  = require("fs");
 const json2csv = require("json2csv").Parser;
+const {google} = require('googleapis');
+const keys= require("./keys.json");
 
+
+
+const client  = new google.auth.JWT(
+    keys.client_email, 
+    null, 
+    keys.private_key,
+    ['https://www.googleapis.com/auth/spreadsheets']
+);
+
+client.authorize(function(err,tokens){
+
+    if(err)
+    {
+        console.log(err);
+        return;
+    } else{
+        console.log('connected!!!')
+        gsrun(client);
+    }
+
+})
+
+async function gsrun(cl)
+{
+    const gsapi = google.sheets({version:'v4', auth:cl});
+    const updateopt ={
+        spreadsheetId : '1vE8q7eGAn3tdivMGle1pLSNGyB8uuGm8wWUjbS5KsOk',
+        range: "Sheet1!A2",
+        valueInputOption : 'USER_ENTERED',
+        resource  : {values : propertyData}
+    
+        
+    
+    };
+    
+    let res  = await gsapi.spreadsheets.values.update(updateopt);
+    console.log(res);
+}
 
 let propertyData =[];
 
@@ -46,7 +86,8 @@ let propertyData =[];
         console.log(propertyData);
         const json2csvParser = new json2csv();
         const csv = json2csvParser.parse(propertyData);
-        fs.writeFileSync("./csv/data.csv",csv,"utf-8");
+
+        fs.writeFileSync("./csv/data.xlsx",csv,"utf-8");
 
         
 
